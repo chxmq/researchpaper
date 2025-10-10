@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Research Paper Generator - Transform Code into Papers{% endblock %}
+
+{% block content %}
+<!-- Main Generator Section -->
+<section class="py-5" id="generator">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h4 class="mb-0 text-center">Generate Research Paper</h4>
+                    </div>
+                    <div class="card-body p-5">
+                        <!-- Progress Steps -->
+                        <div class="row mb-5">
+                            <div class="col-4 text-center">
+                                <div class="step active" id="step1">
+                                    <div class="step-icon">
+                                        <i class="fas fa-link"></i>
+                                    </div>
+                                    <div class="step-text">Repository</div>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="step" id="step2">
+                                    <div class="step-icon">
+                                        <i class="fas fa-cogs"></i>
+                                    </div>
+                                    <div class="step-text">Analysis</div>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="step" id="step3">
+                                    <div class="step-icon">
+                                        <i class="fas fa-download"></i>
+                                    </div>
+                                    <div class="step-text">Download</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 1: Repository Input -->
+                        <div id="repository-step">
+                            <div class="mb-4">
+                                <label for="repoUrl" class="form-label fw-bold">GitHub Repository URL</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fab fa-github text-dark"></i>
+                                    </span>
+                                    <input type="url" class="form-control form-control-lg" id="repoUrl" 
+                                           placeholder="https://github.com/username/repository" required>
+                                </div>
+                                <div class="form-text">Enter the full URL of your GitHub repository</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Choose Journal Template</label>
+                                <div class="row" id="templateSelection">
+                                    <!-- Templates will be loaded dynamically -->
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="pageCount" class="form-label fw-bold">Number of Pages (Max 10)</label>
+                                <input type="number" class="form-control form-control-lg" id="pageCount" 
+                                       min="4" max="10" value="6" required>
+                                <div class="form-text">Enter the desired length for your research paper (4-10 pages)</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="authorCount" class="form-label fw-bold">Number of Authors</label>
+                                <input type="number" class="form-control form-control-lg" id="authorCount" 
+                                       min="1" max="10" value="1" required onchange="updateAuthorFields()">
+                                <div class="form-text">How many authors for this paper?</div>
+                            </div>
+
+                            <div id="authorsContainer" class="mb-4">
+                                <!-- Author fields will be dynamically added here -->
+                            </div>
+
+                            <div class="d-grid">
+                                <button class="btn btn-primary btn-lg" onclick="analyzeRepository()">
+                                    <i class="fas fa-search me-2"></i>
+                                    Analyze Repository
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div class="loading text-center py-5" id="loading" style="display: none;">
+                            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h5>Analyzing your repository...</h5>
+                            <p class="text-muted">This may take a few moments</p>
+                        </div>
+
+                        <!-- Analysis Results -->
+                        <div class="analysis-result" id="analysisResult" style="display: none;">
+                            <div class="alert alert-success border-0">
+                                <h5 class="mb-2">
+                                    <i class="fas fa-check-circle me-2"></i>Analysis Complete!
+                                </h5>
+                                <p class="mb-0">Your repository has been successfully analyzed. Review the details below and generate your research paper.</p>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold text-primary">Project Information</h6>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><strong>Name:</strong> <span id="projectName"></span></li>
+                                        <li class="mb-2"><strong>Type:</strong> <span id="projectType"></span></li>
+                                        <li class="mb-2"><strong>Files:</strong> <span id="fileCount"></span></li>
+                                        <li class="mb-2"><strong>Lines of Code:</strong> <span id="lineCount"></span></li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold text-primary">Technologies</h6>
+                                    <div id="technologies"></div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid">
+                                <button class="btn btn-success btn-lg" onclick="generatePaper()">
+                                    <i class="fas fa-file-alt me-2"></i>
+                                    Generate Research Paper
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Download Section -->
+                        <div class="analysis-result" id="downloadSection" style="display: none;">
+                            <div class="alert alert-success border-0">
+                                <h5 class="mb-2">
+                                    <i class="fas fa-download me-2"></i>Paper Generated Successfully!
+                                </h5>
+                                <p class="mb-3">Your research paper has been generated and is ready for download.</p>
+                                <a href="#" class="btn btn-success btn-lg" id="downloadLink">
+                                    <i class="fas fa-download me-2"></i>
+                                    Download Research Paper
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

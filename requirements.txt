@@ -1,0 +1,10 @@
+# Core dependencies
+flask==2.3.3
+python-dotenv==1.0.0
+google-generativeai
+gitpython==3.1.40
+python-docx==0.8.11
+
+# LaTeX and PDF generation
+jinja2==3.1.2
+subprocess32

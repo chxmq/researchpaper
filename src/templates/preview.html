@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block title %}Paper Preview - Research Paper Generator{% endblock %}
+
+{% block extra_head %}
+<style>
+    .preview-container {
+        display: flex;
+        height: calc(100vh - 76px);
+        margin-top: 76px;
+    }
+    .editor-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid #e2e8f0;
+    }
+    .preview-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #f8fafc;
+    }
+    .editor-header {
+        background: #1e293b;
+        color: white;
+        padding: 1rem;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    .preview-header {
+        background: #3b82f6;
+        color: white;
+        padding: 1rem;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    .editor-content {
+        flex: 1;
+        padding: 0;
+    }
+    .preview-content {
+        flex: 1;
+        padding: 2rem;
+        overflow-y: auto;
+        background: white;
+        margin: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    #latex-editor {
+        width: 100%;
+        height: 100%;
+        border: none;
+        padding: 1rem;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: none;
+        outline: none;
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    .latex-preview {
+        font-family: 'Times New Roman', serif;
+        line-height: 1.6;
+        color: #1f2937;
+    }
+    .latex-preview h1 {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    .latex-preview h2 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    .latex-preview h3 {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+    .latex-preview p {
+        margin-bottom: 1rem;
+        text-align: justify;
+    }
+    .latex-preview .abstract {
+        background: #f1f5f9;
+        padding: 1rem;
+        border-left: 4px solid #3b82f6;
+        margin: 1rem 0;
+        font-style: italic;
+    }
+    .latex-preview .keywords {
+        background: #fef3c7;
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        margin: 1rem 0;
+        font-weight: 500;
+    }
+    .status-bar {
+        background: #64748b;
+        color: white;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="preview-container">
+    <!-- Editor Panel -->
+    <div class="editor-panel">
+        <div class="editor-header">
+            <h5 class="mb-0">
+                <i class="fas fa-code me-2"></i>
+                LaTeX Editor
+            </h5>
+            <div class="btn-group">
+                <button class="btn btn-light btn-sm" onclick="savePaper()">
+                    <i class="fas fa-save me-1"></i>Save
+                </button>
+                <button class="btn btn-success btn-sm" onclick="compileToPDF()">
+                    <i class="fas fa-file-pdf me-1"></i>Compile PDF
+                </button>
+            </div>
+        </div>
+        <div class="editor-content">
+            <textarea id="latex-editor" placeholder="LaTeX content will appear here...">{{ latex_content }}</textarea>
+        </div>
+        <div class="status-bar">
+            <span id="status-text">Ready</span>
+            <span id="line-count">Lines: 0</span>
+        </div>
+    </div>
+
+    <!-- Preview Panel -->
+    <div class="preview-panel">
+        <div class="preview-header">
+            <h5 class="mb-0">
+                <i class="fas fa-eye me-2"></i>
+                Paper Preview
+            </h5>
+            <div class="btn-group">
+                <button class="btn btn-light btn-sm" onclick="refreshPreview()">
+                    <i class="fas fa-sync me-1"></i>Refresh
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="downloadLatex()">
+                    <i class="fas fa-download me-1"></i>Download LaTeX
+                </button>
+            </div>
+        </div>
+        <div class="preview-content">
+            <div id="latex-preview" class="latex-preview">
+                <!-- Preview content will be rendered here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 id="loading-text">Processing...</h5>
+                <p class="text-muted mb-0" id="loading-subtext">Please wait while we process your request</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentFilename = '{{ filename }}';
+let isModified = false;
+
+// Initialize editor
+document.addEventListener('DOMContentLoaded', function() {
+    const editor = document.getElementById('latex-editor');
+    const preview = document.getElementById('latex-preview');
+    
+    // Update line count
+    function updateLineCount() {
+        const lines = editor.value.split('\n').length;
+        document.getElementById('line-count').textContent = `Lines: ${lines}`;
+    }
+    
+    // Auto-save every 30 seconds
+    setInterval(function() {
+        if (isModified) {
+            savePaper(true);
+        }
+    }, 30000);
+    
+    // Editor event listeners
+    editor.addEventListener('input', function() {
+        isModified = true;
+        updateLineCount();
+        updateStatus('Modified');
+    });
+    
+    editor.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            savePaper();
+        }
+    });
+    
+    // Initial setup
+    updateLineCount();
+    refreshPreview();
+});
+
+function updateStatus(message) {
+    document.getElementById('status-text').textContent = message;
+}
+
+function showLoading(text, subtext) {
+    document.getElementById('loading-text').textContent = text;
+    document.getElementById('loading-subtext').textContent = subtext;
+    new bootstrap.Modal(document.getElementById('loadingModal')).show();
+}
+
+function hideLoading() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+    if (modal) modal.hide();
+}
+
+function savePaper(auto = false) {
+    const content = document.getElementById('latex-editor').value;
+    
+    if (!auto) {
+        showLoading('Saving...', 'Updating your paper');
+    }
+    
+    fetch('/api/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            filename: currentFilename,
+            latex_content: content
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            isModified = false;
+            updateStatus('Saved');
+            if (!auto) {
+                hideLoading();
+                showNotification('Paper saved successfully!', 'success');
+            }
+        } else {
+            throw new Error(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Save error:', error);
+        updateStatus('Save failed');
+        if (!auto) {
+            hideLoading();
+            showNotification('Failed to save paper: ' + error.message, 'error');
+        }
+    });
+}
+
+function compileToPDF() {
+    showLoading('Compiling PDF...', 'Converting LaTeX to PDF');
+    
+    fetch('/api/compile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            filename: currentFilename
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hideLoading();
+            showNotification('PDF compiled successfully!', 'success');
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.href = data.download_url;
+            link.download = data.pdf_filename;
+            link.click();
+        } else {
+            throw new Error(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Compile error:', error);
+        hideLoading();
+        showNotification('Failed to compile PDF: ' + error.message, 'error');
+    });
+}
+
+function refreshPreview() {
+    const content = document.getElementById('latex-editor').value;
+    const preview = document.getElementById('latex-preview');
+    
+    // Simple LaTeX to HTML conversion for preview
+    let htmlContent = content
+        .replace(/\\title\{([^}]+)\}/g, '<h1>$1</h1>')
+        .replace(/\\section\{([^}]+)\}/g, '<h2>$1</h2>')
+        .replace(/\\subsection\{([^}]+)\}/g, '<h3>$1</h3>')
+        .replace(/\\begin\{abstract\}([\s\S]*?)\\end\{abstract\}/g, '<div class="abstract"><strong>Abstract:</strong><br>$1</div>')
+        .replace(/\\begin\{IEEEkeywords\}([\s\S]*?)\\end\{IEEEkeywords\}/g, '<div class="keywords"><strong>Keywords:</strong> $1</div>')
+        .replace(/\\begin\{keyword\}([\s\S]*?)\\end\{keyword\}/g, '<div class="keywords"><strong>Keywords:</strong> $1</div>')
+        .replace(/\\textbf\{([^}]+)\}/g, '<strong>$1</strong>')
+        .replace(/\\textit\{([^}]+)\}/g, '<em>$1</em>')
+        .replace(/\\cite\{([^}]+)\}/g, '<sup>[$1]</sup>')
+        .replace(/\\\\/g, '<br>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>');
+    
+    preview.innerHTML = htmlContent;
+}
+
+function downloadLatex() {
+    const link = document.createElement('a');
+    link.href = `/api/download/${currentFilename}`;
+    link.download = currentFilename;
+    link.click();
+}
+
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+// Warn before leaving if there are unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    if (isModified) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+</script>
+{% endblock %}
