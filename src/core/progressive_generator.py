@@ -293,10 +293,10 @@ CONTEXT:
 {compact}
 
 STRUCTURE:
-\\subsection{Background} — describe the technical problem/domain this code addresses
-\\subsection{Motivation} — why this approach/stack matters for the domain
-\\subsection{Contributions} — 3–5 bullet points referencing real files/functions/patterns
-\\subsection{Organization} — map of remaining sections
+\\subsection{Background} - describe the technical problem/domain this code addresses
+\\subsection{Motivation} - why this approach/stack matters for the domain
+\\subsection{Contributions} - 3-5 bullet points referencing real files/functions/patterns
+\\subsection{Organization} - map of remaining sections
 
 RULES:
 - Cite specific files and functions with line numbers where provided (e.g., core/rag.py: generate_solution@142)
@@ -515,11 +515,11 @@ CONTEXT (per-file summaries with functions@line, imports@line, patterns):
 {compact}
 
 STRUCTURE:
-\\subsection{System Architecture} — actual file organization and responsibilities
-\\subsection{Core Components} — per-file descriptions; cite functions with line numbers
-\\subsection{Technology Integration} — how the stack is used in code
-\\subsection{Implementation Patterns} — patterns detected (e.g., event_handling xN)
-\\subsection{Technical Challenges} — inferred from complexity and structure
+\\subsection{{System Architecture}} - actual file organization and responsibilities
+\\subsection{{Core Components}} - per-file descriptions; cite functions with line numbers
+\\subsection{{Technology Integration}} - how the stack is used in code
+\\subsection{{Implementation Patterns}} - patterns detected (e.g., event_handling xN)
+\\subsection{{Technical Challenges}} - inferred from complexity and structure
 
 RULES:
 - Do NOT invent features; use only the provided summaries

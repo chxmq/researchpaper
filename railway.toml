@@ -1,0 +1,8 @@
+# Railway deployment configuration
+# Environment Variables needed:
+# GEMINI_API_KEY=AIzaSyCLhkBuuaMEsiiuDYM20hcRF1Ei1GiJu9Q
+# GIT_PYTHON_REFRESH=quiet
+# PORT=3000
+
+# Build Command: pip install -r requirements.txt
+# Start Command: python main.py

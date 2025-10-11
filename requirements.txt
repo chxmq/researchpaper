@@ -8,3 +8,6 @@ python-docx==0.8.11
 # LaTeX and PDF generation
 jinja2==3.1.2
 subprocess32
+
+# Additional dependencies for deployment
+reportlab
