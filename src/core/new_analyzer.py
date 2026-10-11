@@ -39,7 +39,7 @@ class NewGitHubAnalyzer:
     
     def __init__(self):
         # Hardcoded API key for immediate functionality
-        api_key = os.getenv('GEMINI_API_KEY') or 'AIzaSyCLhkBuuaMEsiiuDYM20hcRF1Ei1GiJu9Q'
+        api_key = os.getenv('GEMINI_API_KEY')
         if api_key:
             genai.configure(api_key=api_key)
             try:
